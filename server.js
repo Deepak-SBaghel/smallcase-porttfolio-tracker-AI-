@@ -1,5 +1,5 @@
 // ============================================
-// Portfolio Tracker - Backend Server
+// Portfolio Tracker - Frontend Server
 // ============================================
 // A simple Express server that lets you:
 //   1. Add buy/sell trades to your portfolio
@@ -40,11 +40,11 @@ let holdings = [];
 // ============================================
 
 const currentPrices = {
-  TCS: 3500,
-  INFY: 1800,
-  RELIANCE: 2500,
-  WIPRO: 450,
-  HDFC: 1600,
+    TCS: 3500,
+    INFY: 1800,
+    RELIANCE: 2500,
+    WIPRO: 450,
+    HDFC: 1600,
 };
 
 // ============================================
@@ -62,102 +62,102 @@ const currentPrices = {
 // ============================================
 
 app.post("/holdings", (req, res) => {
-  const { stock_ticker, shares, price, trade_type } = req.body;
+    const { stock_ticker, shares, price, trade_type } = req.body;
 
-  // --- Basic validation ---
-  // Make sure the user sent all required fields
-  if (!stock_ticker || !shares || !price || !trade_type) {
-    return res.status(400).json({
-      error: "Please provide stock_ticker, shares, price, and trade_type",
-    });
-  }
-
-  // Make sure trade_type is either "buy" or "sell"
-  if (trade_type !== "buy" && trade_type !== "sell") {
-    return res.status(400).json({
-      error: 'trade_type must be either "buy" or "sell"',
-    });
-  }
-
-  // Make sure shares and price are positive numbers
-  if (shares <= 0 || price <= 0) {
-    return res.status(400).json({
-      error: "shares and price must be positive numbers",
-    });
-  }
-
-  // --- Check if we already have this stock in our portfolio ---
-  let existingHolding = null;
-  for (let i = 0; i < holdings.length; i++) {
-    if (holdings[i].stock_ticker === stock_ticker) {
-      existingHolding = holdings[i];
-      break;
-    }
-  }
-
-  // --- Handle BUY trade ---
-  if (trade_type === "buy") {
-    if (existingHolding) {
-      // We already own this stock, so update it
-      // Calculate the new average buy price using the weighted average formula:
-      // new_avg = (old_avg * old_shares + new_price * new_shares) / (old_shares + new_shares)
-
-      let oldShares = existingHolding.shares;
-      let oldAvg = existingHolding.average_buy_price;
-
-      let totalCost = oldAvg * oldShares + price * shares;
-      let totalShares = oldShares + shares;
-      let newAverage = totalCost / totalShares;
-
-      existingHolding.shares = totalShares;
-      existingHolding.average_buy_price = newAverage;
-
-      return res.status(200).json(existingHolding);
-    } else {
-      // We don't own this stock yet, so create a new holding
-      let newHolding = {
-        _id: uuidv4(),
-        stock_ticker: stock_ticker,
-        shares: shares,
-        average_buy_price: price, // first buy, so avg price = the buy price
-        trade_type: "buy",
-      };
-
-      holdings.push(newHolding);
-
-      return res.status(201).json(newHolding);
-    }
-  }
-
-  // --- Handle SELL trade ---
-  if (trade_type === "sell") {
-    // Can't sell something you don't own
-    if (!existingHolding) {
-      return res.status(400).json({
-        error: `You don't own any shares of ${stock_ticker}. Can't sell what you don't have!`,
-      });
+    // --- Basic validation ---
+    // Make sure the user sent all required fields
+    if (!stock_ticker || !shares || !price || !trade_type) {
+        return res.status(400).json({
+            error: "Please provide stock_ticker, shares, price, and trade_type",
+        });
     }
 
-    // Can't sell more shares than you have
-    if (shares > existingHolding.shares) {
-      return res.status(400).json({
-        error: `You only have ${existingHolding.shares} shares of ${stock_ticker}. Can't sell ${shares}.`,
-      });
+    // Make sure trade_type is either "buy" or "sell"
+    if (trade_type !== "buy" && trade_type !== "sell") {
+        return res.status(400).json({
+            error: 'trade_type must be either "buy" or "sell"',
+        });
     }
 
-    // Reduce the shares. Average buy price stays the same.
-    existingHolding.shares = existingHolding.shares - shares;
-
-    // If all shares are sold, remove the holding from the array
-    if (existingHolding.shares === 0) {
-      holdings = holdings.filter((h) => h.stock_ticker !== stock_ticker);
-      return res.status(200).json({
-        message: `All shares of ${stock_ticker} sold. Holding removed.`,
-      });
+    // Make sure shares and price are positive numbers
+    if (shares <= 0 || price <= 0) {
+        return res.status(400).json({
+            error: "shares and price must be positive numbers",
+        });
     }
 
-    return res.status(200).json(existingHolding);
-  }
+    // --- Check if we already have this stock in our portfolio ---
+    let existingHolding = null;
+    for (let i = 0; i < holdings.length; i++) {
+        if (holdings[i].stock_ticker === stock_ticker) {
+            existingHolding = holdings[i];
+            break;
+        }
+    }
+
+    // --- Handle BUY trade ---
+    if (trade_type === "buy") {
+        if (existingHolding) {
+            // We already own this stock, so update it
+            // Calculate the new average buy price using the weighted average formula:
+            // new_avg = (old_avg * old_shares + new_price * new_shares) / (old_shares + new_shares)
+
+            let oldShares = existingHolding.shares;
+            let oldAvg = existingHolding.average_buy_price;
+
+            let totalCost = oldAvg * oldShares + price * shares;
+            let totalShares = oldShares + shares;
+            let newAverage = totalCost / totalShares;
+
+            existingHolding.shares = totalShares;
+            existingHolding.average_buy_price = newAverage;
+
+            return res.status(200).json(existingHolding);
+        } else {
+            // We don't own this stock yet, so create a new holding
+            let newHolding = {
+                _id: uuidv4(),
+                stock_ticker: stock_ticker,
+                shares: shares,
+                average_buy_price: price, // first buy, so avg price = the buy price
+                trade_type: "buy",
+            };
+
+            holdings.push(newHolding);
+
+            return res.status(201).json(newHolding);
+        }
+    }
+
+    // --- Handle SELL trade ---
+    if (trade_type === "sell") {
+        // Can't sell something you don't own
+        if (!existingHolding) {
+            return res.status(400).json({
+                error: `You don't own any shares of ${stock_ticker}. Can't sell what you don't have!`,
+            });
+        }
+
+        // Can't sell more shares than you have
+        if (shares > existingHolding.shares) {
+            return res.status(400).json({
+                error: `You only have ${existingHolding.shares} shares of ${stock_ticker}. Can't sell ${shares}.`,
+            });
+        }
+
+        // Reduce the shares. Average buy price stays the same.
+        existingHolding.shares = existingHolding.shares - shares;
+
+        // If all shares are sold, remove the holding from the array
+        if (existingHolding.shares === 0) {
+            holdings = holdings.filter((h) => h.stock_ticker !== stock_ticker);
+            return res.status(200).json({
+                message: `All shares of ${stock_ticker} sold. Holding removed.`,
+            });
+        }
+
+        return res.status(200).json(existingHolding);
+    }
 });
 
 // ============================================
@@ -170,7 +170,7 @@ app.post("/holdings", (req, res) => {
 // ============================================
 
 app.get("/holdings", (req, res) => {
-  return res.status(200).json(holdings);
+    return res.status(200).json(holdings);
 });
 
 // ============================================
@@ -186,23 +186,23 @@ app.get("/holdings", (req, res) => {
 // ============================================
 
 app.get("/holdings/returns", (req, res) => {
-  let totalReturns = 0;
+    let totalReturns = 0;
 
-  for (let i = 0; i < holdings.length; i++) {
-    let holding = holdings[i];
+    for (let i = 0; i < holdings.length; i++) {
+        let holding = holdings[i];
 
-    // Look up the current price from our hardcoded prices
-    // If we don't have a price for this stock, default to 100
-    let currentPrice = currentPrices[holding.stock_ticker] || 100;
+        // Look up the current price from our hardcoded prices
+        // If we don't have a price for this stock, default to 100
+        let currentPrice = currentPrices[holding.stock_ticker] || 100;
 
-    // Calculate return for this stock
-    let returnForThisStock =
-      (currentPrice - holding.average_buy_price) * holding.shares;
+        // Calculate return for this stock
+        let returnForThisStock =
+            (currentPrice - holding.average_buy_price) * holding.shares;
 
-    totalReturns = totalReturns + returnForThisStock;
-  }
+        totalReturns = totalReturns + returnForThisStock;
+    }
 
-  return res.status(200).json({ returns: totalReturns });
+    return res.status(200).json({ returns: totalReturns });
 });
 
 // ============================================
@@ -210,11 +210,11 @@ app.get("/holdings/returns", (req, res) => {
 // ============================================
 
 app.listen(PORT, () => {
-  console.log(`Portfolio Tracker server is running on http://localhost:${PORT}`);
-  console.log("");
-  console.log("Available endpoints:");
-  console.log("  POST /holdings         - Add a buy/sell trade");
-  console.log("  GET  /holdings         - View all holdings");
-  console.log("  GET  /holdings/returns - Calculate portfolio returns");
-  console.log("");
+    console.log(`Portfolio Tracker server is running on http://localhost:${PORT}`);
+    console.log("");
+    console.log("Available endpoints:");
+    console.log("  POST /holdings         - Add a buy/sell trade");
+    console.log("  GET  /holdings         - View all holdings");
+    console.log("  GET  /holdings/returns - Calculate portfolio returns");
+    console.log("");
 });
